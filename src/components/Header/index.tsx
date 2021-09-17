@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { MdShoppingBasket } from 'react-icons/md';
 
@@ -7,9 +7,8 @@ import { Container, Cart } from './styles';
 import { useCart } from '../../hooks/useCart';
 
 const Header = (): JSX.Element => {
-  const { cart } = useCart();
-  const [cartSize] = useState(cart.length)
-
+  const { cartSize } = useCart();
+ 
   return (
     <Container>
       <Link to="/">

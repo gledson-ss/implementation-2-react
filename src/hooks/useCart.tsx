@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../services/api';
 import { Product, Stock } from '../types';
@@ -17,6 +17,7 @@ interface CartContextData {
   addProduct: (productId: number) => Promise<void>;
   removeProduct: (productId: number) => void;
   updateProductAmount: ({ productId, amount }: UpdateProductAmount) => void;
+  cartSize: number;
 }
 
 const CartContext = createContext<CartContextData>({} as CartContextData);
@@ -31,44 +32,53 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
     return [];
   });
+  const [cartSize, setCartSize] = useState(cart.length)
+
+  useEffect(() =>{
+    localStorage.setItem('@RocketShoes:cart', JSON.stringify(cart))
+  }, [cart])
 
   const addProduct = async (productId: number) => {
     try {
-      const response: Product[] = (await api.get('products')).data;
+      const response: Product = (await api.get(`products/${productId}`)).data;
       
-      var hasId = cart.find((product) =>{
+      const responseStock: Stock = (await api.get(`stock/${productId}`)).data
+      
+      const hasStock = cart.find((product) => {
+        return responseStock.amount <= product.amount;
+      })
+      if(!hasStock) {
+        toast.error('Quantidade solicitada fora de estoque');
+      }
+      const hasId = cart.find((product) =>{
         return productId === product.id
       })
 
       if(hasId === undefined) {
-        response.forEach((product) =>{
-          if(product.id === productId){
-            setCart([...cart, {id: product.id, amount: 1, image: product.image, price: product.price,title: product.title }])
-          }
-        })
-        
+        setCart([...cart, {id: response.id, amount: 1, image: response.image, price: response.price,title: response.title }])
+        setCartSize(cartSize + 1);
       }
       else{
-        const newCart: Product[] = [];
-        cart.forEach((product) => {
+        const newCart: Product[] = cart.map((product) =>{
           if(product.id === productId){
-            newCart.push({
-              id: product.id,
-              amount: product.amount + 1,
-              image: product.image,
-              price: product.price,
-              title: product.title
-            })
+            return ({
+                    id: product.id,
+                    amount: product.amount + 1,
+                    image: product.image,
+                    price: product.price,
+                    title: product.title
+                  })
           }
           else{
-            newCart.push(product)
+            return product
           }
         })
         setCart(newCart)
+        
       }
-      console.log(cart)
-    } catch {
       
+    } catch {
+      toast.error('Erro na adição do produto');
     }
   };
 
@@ -93,7 +103,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   return (
     <CartContext.Provider
-      value={{ cart, addProduct, removeProduct, updateProductAmount }}
+      value={{ cart, addProduct, removeProduct, updateProductAmount, cartSize }}
     >
       {children}
     </CartContext.Provider>
