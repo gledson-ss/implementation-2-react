@@ -18,7 +18,7 @@ interface Product {
 }
 
 const Cart = (): JSX.Element => {
-  const { cart, removeProduct, updateProductAmount, addProduct } = useCart();
+  const { cart, removeProduct, updateProductAmount } = useCart();
 
   const cartFormatted = cart.map((product: Product) => ({
     ...product,
@@ -33,15 +33,23 @@ const Cart = (): JSX.Element => {
     )
 
   function handleProductIncrement(product: Product) {
-    addProduct(product.id)
+    const newAmount = product.amount + 1
+    updateProductAmount({
+      productId: product.id,
+      amount: newAmount
+    });
   }
 
   function handleProductDecrement(product: Product) {
-    removeProduct(product.id)
+    const newAmount = product.amount - 1
+    updateProductAmount({
+      productId: product.id,
+      amount: newAmount
+    });
   }
 
   function handleRemoveProduct(productId: number) {
-    // TODO
+    removeProduct(productId)
   }
 
   return (
@@ -73,7 +81,7 @@ const Cart = (): JSX.Element => {
                       type="button"
                       data-testid="decrement-product"
                       disabled={product.amount <= 1}
-                    // onClick={() => handleProductDecrement()}
+                      onClick={() => handleProductDecrement(product)}
                     >
                       <MdRemoveCircleOutline size={20} />
                     </button>
@@ -99,7 +107,7 @@ const Cart = (): JSX.Element => {
                   <button
                     type="button"
                     data-testid="remove-product"
-                  // onClick={() => handleRemoveProduct(product.id)}
+                    onClick={() => handleRemoveProduct(product.id)}
                   >
                     <MdDelete size={20} />
                   </button>

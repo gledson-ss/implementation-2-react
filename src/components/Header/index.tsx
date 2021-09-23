@@ -7,8 +7,9 @@ import { Container, Cart } from './styles';
 import { useCart } from '../../hooks/useCart';
 
 const Header = (): JSX.Element => {
-  const { cartSize } = useCart();
- 
+  const { cart } = useCart();
+  const cartSize = cart.length;
+
   return (
     <Container>
       <Link to="/">
